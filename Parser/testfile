@@ -1,0 +1,6 @@
+ls
+ls -l
+./a.out < input > output
+mkdir -p test &
+./a.out > output < input
+ls -l | grep "kek"
