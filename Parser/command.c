@@ -145,7 +145,7 @@ int set_params(struct command_line *this,char *infile,char *outfile,bool appendM
 
 int delete_cmd_line(struct command_line *this){
     for(int i=0;i<this->num_command_entries;i++){
-        free(this->command_entry_list[i]);
+        delete_cmd_entry(this->command_entry_list[i]);
     }
     if(this->infile != NULL)
         free(this->infile);
@@ -199,7 +199,7 @@ int add_cmd_line(struct command_table *table,struct command_line *line){
 
 int delete_cmd_table(struct command_table *this){
     for(int i=0;i<this->num_args;i++){
-        free(this->cmd_line_list[i]);
+        delete_cmd_line(this->cmd_line_list[i]);
     }
     free(this);
     return 1;
