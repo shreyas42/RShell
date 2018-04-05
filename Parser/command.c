@@ -59,6 +59,8 @@ int add_argument(struct command_entry *this,char *arg){
 
 int delete_cmd_entry(struct command_entry *this){
     free(this->command_name);
+    for(int i=0;i<this->numArgs;i++)
+        free(this->arglist[i]);
     free(this->arglist);
     free(this);
     return 1;
