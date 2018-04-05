@@ -52,16 +52,19 @@ struct command_table{
 struct command_entry *create_cmd_entry(char *cmd_name);
 int add_argument(struct command_entry *cur_entry,char *arg);
 int delete_cmd_entry(struct command_entry *this);
+void disp_cmd_entry(struct command_entry *this);
 
 //command line functions
 struct command_line *create_cmd_line();
 int add_cmd_entry(struct command_line *cur_line,struct command_entry *cur_cmd);
 int set_params(struct command_line *line,char *infile,char *outfile,bool appendMode,bool isBackground);
 int delete_cmd_line(struct command_line *this);
+void disp_cmd_line(struct command_line *this);
 
 //command table functions
 struct command_table *initialize_command_table();
 int add_cmd_line(struct command_table *table,struct command_line *cur_line);
 int delete_cmd_table(struct command_table *this);
+void disp_cmd_table(struct command_table *this);
 
 #endif

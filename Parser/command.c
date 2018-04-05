@@ -66,6 +66,24 @@ int delete_cmd_entry(struct command_entry *this){
     return 1;
 }
 
+void disp_cmd_entry(struct command_entry *this){
+    if(this == NULL){
+        fprintf(stderr,"Initialize before use error in %s at line %d\n",__FILE__,__LINE__);
+        return ;
+    }
+    if(this->command_name == NULL){
+        fprintf(stderr,"Initialize before use error in %s at line %d\n",__FILE__,__LINE__);
+        return ;
+    }
+    printf("%s\n",this->command_name);
+    if(this->arglist != NULL){
+        for(int i=0;i<this->numArgs;i++){
+            printf(" %s",this->arglist[i]);
+        }    
+    }
+    printf("\n");
+}
+
 //command line functions
 struct command_line *create_cmd_line(){
     struct command_line *this;
@@ -157,6 +175,30 @@ int delete_cmd_line(struct command_line *this){
     return 1;
 }
 
+void disp_cmd_line(struct command_line *this){
+    if(this == NULL){
+        fprintf(stderr,"Initialize before use error in %s at line %d\n",__FILE__,__LINE__);
+        return ;
+    }
+    if(this->command_entry_list != NULL){
+        for(int i=0;i<this->num_command_entries;i++){
+            disp_cmd_entry(this->command_entry_list[i]);
+        }
+    }
+    if(this->infile != NULL){
+        printf("Infile: %s\n",this->infile);
+    }
+    if(this->outfile != NULL){
+        printf("Infile: %s\n",this->outfile);
+    }
+    if(this->appendMode){
+        printf("Append Mode\n");
+    }
+    if(this->isBackground){
+        printf("Background process\n");
+    }
+}
+
 //command table functions
 struct command_table *initialize_command_table(){
     struct command_table *this;
@@ -205,4 +247,16 @@ int delete_cmd_table(struct command_table *this){
     }
     free(this);
     return 1;
+}
+
+void disp_cmd_table(struct command_table *this){
+    if(this == NULL){
+        fprintf(stderr,"Initialize before use error in %s at line %d\n",__FILE__,__LINE__);
+        return ;
+    }
+    if(this->cmd_line_list != NULL){
+        for(int i=0;i<this->num_args;i++){
+            disp_cmd_line(this->cmd_line_list[i]);
+        }
+    }
 }
