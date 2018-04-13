@@ -1,0 +1,7 @@
+CMD: cls, PID: 351
+CMD: list, PID: 352
+CMD: ls | grep bin > outfile, PID: 354
+CMD: ls |grep bin, PID: 357
+CMD: ls |grep bin > out, PID: 359
+CMD: cat out, PID: 360
+CMD: cat cmdhistory.txt, PID: 361

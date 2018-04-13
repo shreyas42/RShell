@@ -1,0 +1,262 @@
+#!/usr/bin/python3
+import sys
+from PyQt5 import QtCore, QtGui, QtWidgets, QtPrintSupport
+from PyQt5.QtCore import Qt
+
+class Main(QtWidgets.QMainWindow):
+    def __init__(self, parent = None):
+        QtWidgets.QMainWindow.__init__(self,parent)
+
+        self.filename = ""
+
+        self.initUI()
+
+    def initUI(self):
+
+        self.text = QtWidgets.QTextEdit(self)
+        self.setCentralWidget(self.text)
+        self.text.setTabStopWidth(33)
+        self.setWindowIcon(QtGui.QIcon("icons/icon.svg"))
+
+        self.text.cursorPositionChanged.connect(self.cursorPosition)
+
+        self.initToolbar()
+        self.initFormatbar()
+        self.initMenubar()
+
+        self.statusbar = self.statusBar()
+
+        self.setGeometry(150,100,1150,800)
+        self.setWindowTitle("Editor")
+
+    def cursorPosition(self):
+
+        cursor = self.text.textCursor()
+
+        line = cursor.blockNumber()+1
+        col = cursor.columnNumber()
+
+        self.statusbar.showMessage("Line: {}|Coloumn: {}".format(line,col))
+
+    def initToolbar(self):
+
+        self.newAction = QtWidgets.QAction(QtGui.QIcon("icons/new.svg"),"New",self)
+        self.newAction.setStatusTip("Create a new document.")
+        self.newAction.setShortcut("Ctrl+N")
+        self.newAction.triggered.connect(self.new)
+
+        self.openAction = QtWidgets.QAction(QtGui.QIcon("icons/open.svg"),"Open",self)
+        self.openAction.setStatusTip("Open an existing document.")
+        self.openAction.setShortcut("Ctrl+O")
+        self.openAction.triggered.connect(self.open)
+
+        self.saveAction = QtWidgets.QAction(QtGui.QIcon("icons/save.svg"),"Save",self)
+        self.saveAction.setStatusTip("Save a document.")
+        self.saveAction.setShortcut("Ctrl+S")
+        self.saveAction.triggered.connect(self.save)
+
+        self.printAction = QtWidgets.QAction(QtGui.QIcon("icons/print.svg"),"Print document",self)
+        self.printAction.setStatusTip("Print document")
+        self.printAction.setShortcut("Ctrl+P")
+        self.printAction.triggered.connect(self.prints)
+
+        self.previewAction = QtWidgets.QAction(QtGui.QIcon("icons/preview.svg"),"Preview document",self)
+        self.previewAction.setStatusTip("Preview document")
+        self.previewAction.setShortcut("Ctrl+Shift+P")
+        self.previewAction.triggered.connect(self.preview)
+
+        self.cutAction = QtWidgets.QAction(QtGui.QIcon("icons/cut.svg"),"Cut to clipboard",self)
+        self.cutAction.setStatusTip("Delete and copy text to clipboard")
+        self.cutAction.setShortcut("Ctrl+X")
+        self.cutAction.triggered.connect(self.text.cut)
+
+        self.copyAction = QtWidgets.QAction(QtGui.QIcon("icons/copy.svg"),"Copy to clipboard",self)
+        self.copyAction.setStatusTip("Copy text to clipboard")
+        self.copyAction.setShortcut("Ctrl+C")
+        self.copyAction.triggered.connect(self.text.copy)
+
+        self.pasteAction = QtWidgets.QAction(QtGui.QIcon("icons/paste.svg"),"Paste to clipboard",self)
+        self.pasteAction.setStatusTip("Paste the contents of clipboard")
+        self.pasteAction.setShortcut("Ctrl+V")
+        self.pasteAction.triggered.connect(self.text.paste)
+
+        self.redoAction = QtWidgets.QAction(QtGui.QIcon("icons/redo.svg"),"Redo",self)
+        self.redoAction.setStatusTip("Redo last undone thing")
+        self.redoAction.setShortcut("Ctrl+Y")
+        self.redoAction.triggered.connect(self.text.redo)
+
+        self.undoAction = QtWidgets.QAction(QtGui.QIcon("icons/undo.svg"),"Paste to clipboard",self)
+        self.undoAction.setStatusTip("Undo last action")
+        self.undoAction.setShortcut("Ctrl+Z")
+        self.undoAction.triggered.connect(self.text.undo)
+
+        self.numlist = QtWidgets.QAction(QtGui.QIcon("icons/number.svg"),"Numbered List",self)
+        self.numlist.setStatusTip("Make a Numbered Lists")
+        self.numlist.setShortcut("Ctrl+Shift+N")
+        self.numlist.triggered.connect(self.numberList)
+
+        self.bulletlist = QtWidgets.QAction(QtGui.QIcon("icons/bullet.svg"),"Bullet List",self)
+        self.bulletlist.setStatusTip("Make a Bullet Lists")
+        self.bulletlist.setShortcut("Ctrl+Shift+B")
+        self.bulletlist.triggered.connect(self.bulletList)
+
+        self.toolbar = self.addToolBar("Options")
+
+        self.toolbar.addAction(self.newAction)
+        self.toolbar.addAction(self.openAction)
+        self.toolbar.addAction(self.saveAction)
+
+        self.toolbar.addSeparator()
+
+        self.toolbar.addAction(self.printAction)
+        self.toolbar.addAction(self.previewAction)
+
+        self.toolbar.addSeparator()
+
+        self.toolbar.addAction(self.cutAction)
+        self.toolbar.addAction(self.copyAction)
+        self.toolbar.addAction(self.pasteAction)
+
+        self.toolbar.addSeparator()
+
+        self.toolbar.addAction(self.undoAction)
+        self.toolbar.addAction(self.redoAction)
+
+        self.toolbar.addSeparator()
+
+        self.toolbar.addAction(self.numlist)
+        self.toolbar.addAction(self.bulletlist)
+
+        self.toolbar.addSeparator()
+        self.addToolBarBreak()
+
+    def initFormatbar(self):
+
+
+        fontBox = QtWidgets.QFontComboBox(self)
+        fontBox.currentFontChanged.connect(self.fontFamily)
+
+        fontSize = QtWidgets.QComboBox(self)
+        fontSize.setEditable(True)
+
+        fontSize.setMinimumContentsLength(3)
+
+        fontSize.activated.connect(self.fontSize)
+
+        fontSizes = ['6','7','8','9','10','11','12','13','14',
+             '15','16','18','20','22','24','26','28',
+             '32','36','40','44','48','54','60','66',
+             '72','80','88','96','102','110']
+
+        for i in fontSizes:
+             fontSize.addItem(i)
+
+        fontColor = QtWidgets.QAction(QtGui.QIcon("icons/text.svg"),"Change font color",self)
+        fontColor.triggered.connect(self.fontColor)
+
+        backColor = QtWidgets.QAction(QtGui.QIcon("icons/back.svg"),"Change background color",self)
+        backColor.triggered.connect(self.highlight)
+
+        self.formatbar = self.addToolBar("Format")
+
+        self.formatbar.addWidget(fontBox)
+        self.formatbar.addWidget(fontSize)
+
+        self.formatbar.addSeparator()
+
+        self.formatbar.addAction(fontColor)
+        self.formatbar.addAction(backColor)
+
+        self.formatbar.addSeparator()
+
+
+    def fontFamily(self,font):
+      self.text.setCurrentFont(font)
+
+    def fontSize(self, fontsize):
+        self.text.setFontPointSize(int(fontsize))
+
+    def fontColor(self):
+
+        color = QtWidgets.QColorDialog.getColor()
+
+        self.text.setTextColor(color)
+
+    def highlight(self):
+
+        color = QtWidgets.QColorDialog.getColor()
+
+        self.text.setTextBackgroundColor(color)
+
+
+
+
+
+    def initMenubar(self):
+
+        menubar = self.menuBar()
+        file = menubar.addMenu('File')
+        edit = menubar.addMenu("Edit")
+        view = menubar.addMenu('View')
+        file.addAction(self.newAction)
+        file.addAction(self.openAction)
+        file.addAction(self.saveAction)
+        file.addAction(self.printAction)
+        file.addAction(self.previewAction)
+        edit.addAction(self.cutAction)
+        edit.addAction(self.pasteAction)
+        edit.addAction(self.copyAction)
+        edit.addAction(self.redoAction)
+        edit.addAction(self.undoAction)
+
+
+    def new(self):
+        spawn = Main(self)
+        spawn.show()
+
+    def open(self):
+        self.filename = QtWidgets.QFileDialog.getOpenFileName(self, 'Open File',".","(*.*)")
+        if self.filename:
+            with open(self.filename[0],"rt") as file:
+                self.text.setText(file.read())
+
+    def save(self):
+        if not self.filename:
+            self.filename = QtWidgets.QFileDialog.getSaveFileName(self, 'Save File')
+        with open(self.filename[0],"wt") as file:
+            file.write(self.text.toPlainText())
+
+    def prints(self):
+        dialog = QtPrintSupport.QPrintDialog()
+
+        if dialog.exec_() == QtWidgets.QDialog.Accepted:
+            self.text.document().print_(dialog.printer())
+
+    def preview(self):
+        preview = QtPrintSupport.QPrintPreviewDialog()
+
+        preview.paintRequested.connect(lambda p: self.text.print_(p))
+
+        preview.exec_()
+
+    def bulletList(self):
+        cursor = self.text.textCursor()
+
+        cursor.insertList(QtGui.QTextListFormat.ListDisc)
+
+    def numberList(self):
+        cursor = self.text.textCursor()
+
+        cursor.insertList(QtGui.QTextListFormat.ListDecimal)
+
+
+
+def main():
+
+    app = QtWidgets.QApplication(sys.argv)
+    main = Main()
+    main.show()
+    sys.exit(app.exec_())
+
+if __name__ == "__main__":
+    main()

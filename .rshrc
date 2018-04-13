@@ -1,0 +1,12 @@
+%%This is our configuration file. All comments start with '%%'
+%%Format is (@rshell:Key=Value) for the configuration file to work.
+
+@rshell:USERNAME=rishabh
+@rshell:PROMPT=$
+@rshell:HOMEDIR=home
+@rshell:HOST=RDX
+@rshell:PATH="/bin;/usr/bin;./bin"
+
+alias cls=clear
+alias list=ls
+alias foo=whoami
