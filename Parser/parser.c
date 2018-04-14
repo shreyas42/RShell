@@ -4,6 +4,8 @@
 #include "parser.h"
 #include "command.h"
 #include "../util.h"
+#include <regex.h>
+#include <dirent.h>
 
 extern struct history_cmd *hcmd;
 extern FILE *fp;
@@ -68,6 +70,69 @@ char *search(char *alias){
     return NULL;
 }
 
+void process_args_insert(struct simplecmd *cmd, char* arg){
+	regex_t reg;	
+	char *p = strchr(arg, '*');
+	char *q = strchr(arg, '?');
+	size_t matches = 100;
+	regmatch_t matched[matches];
+	if(p == NULL && q == NULL){
+		insert_args(cmd, arg);
+		return ;	
+	}
+	char *regex = (char *)malloc(2*strlen(arg)+10);
+	char *a = arg;
+	char *r = regex;
+	*r = '^'; 
+	r++;
+	while(*a){
+		if(*a == '*'){
+			*r='.';
+			r++;
+			*r='*';
+			r++;		
+		}	
+		else if(*a == '?'){
+			*r='.';
+			r++;		
+		}
+		else if(*a == '.'){
+			*r = '\\';
+			r++;
+			*r='.';
+			r++;		
+		}
+		else{
+			*r = *a;
+			r++;
+		}
+		a++;
+	}
+	*r='$';
+	r++;
+	*r=0;
+	int expbuf = regcomp(&reg, regex, 0);
+	if(expbuf > 0){
+		perror("regcomp");
+		free(regex);		
+		return;
+	}
+	DIR *dir = opendir(".");
+	if(dir == NULL){
+		perror("opendir");
+		free(regex);	
+		return;
+	}
+	struct dirent *ent;
+	while ((ent = readdir(dir))!=NULL){
+		if(regexec(&reg, ent->d_name, matches, matched, 0) == 0){
+			insert_args(cmd, strdup(ent->d_name));
+		}
+	}
+	closedir(dir);
+	free(regex);
+}
+
 void process_token(char *token){
     char *tok = strtok(token, SPACE); //SPACE " "
     struct simplecmd *cmd;
@@ -95,7 +160,7 @@ void process_token(char *token){
                             command_table->background = 1;
                         break;
                 default: if(c == '\0'){
-                            insert_args(cmd, tok);
+                            process_args_insert(cmd, tok);
                         }
                         else if(c == '<'){
                             strcpy(command_table->infile, tok);

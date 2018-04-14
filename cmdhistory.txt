@@ -5,3 +5,68 @@ CMD: ls |grep bin, PID: 357
 CMD: ls |grep bin > out, PID: 359
 CMD: cat out, PID: 360
 CMD: cat cmdhistory.txt, PID: 361
+CMD: ls, PID: 13565
+CMD: clear, PID: 13566
+CMD: ps, PID: 13567
+CMD: ls, PID: 13565
+CMD: clear, PID: 13566
+CMD: ps, PID: 13567
+CMD: reditor, PID: 13570
+CMD: cd sbin, PID: 4199659
+CMD: ls, PID: 13571
+CMD: ./reditor, PID: 13572
+CMD: ls, PID: 13601
+CMD: cls, PID: 13602
+CMD: ps, PID: 13603
+CMD: ps -ef, PID: 13604
+CMD: cls, PID: 13607
+CMD: echo $PATH, PID: 13608
+CMD: cls, PID: 13609
+CMD: ls, PID: 13601
+CMD: cls, PID: 13602
+CMD: ps, PID: 13603
+CMD: ps -ef, PID: 13604
+CMD: cls, PID: 13607
+CMD: echo $PATH, PID: 13608
+CMD: cls, PID: 13609
+CMD: $PATH, PID: 13610
+CMD: clear, PID: 13611
+CMD: cd .., PID: 4199659
+CMD: mkdir test, PID: 13612
+CMD: touch testf, PID: 13613
+CMD: cat > testf, PID: 13614
+CMD: cat >> testf, PID: 13617
+CMD: cat testf, PID: 13618
+CMD: cd RShell/sbin, PID: 4199659
+CMD: ./reditor, PID: 13621
+CMD: cat trial.txt, PID: 13653
+CMD: cls, PID: 13654
+CMD: cd .., PID: 4199659
+CMD: clear, PID: 13655
+CMD: reditor, PID: 13787
+CMD: reditor, PID: 13816
+CMD: reditor, PID: 13891
+CMD: reditor, PID: 13905
+CMD: cls, PID: 13921
+CMD: foo, PID: 13922
+CMD: cls, PID: 13927
+CMD: cls, PID: 13979
+CMD: ps, PID: 13980
+CMD: reditor, PID: 13981
+CMD: ls s*, PID: 14312
+CMD: ls b*, PID: 14433
+CMD: ls Pa*, PID: 14434
+CMD: clear, PID: 14435
+CMD: ls s*, PID: 14436
+CMD: ls s*/icons, PID: 14437
+CMD: clear, PID: 14438
+CMD: ls | grep s*, PID: 14442
+CMD: ls | grep b*, PID: 14444
+CMD: reditor abc.txt, PID: 14454
+CMD: clear, PID: 14470
+CMD: reditor cm*, PID: 14854
+CMD: echo c*, PID: 14863
+CMD: cd Parser, PID: 4200120
+CMD: echo p*, PID: 14866
+CMD: echo c*, PID: 14867
+CMD: clear, PID: 14868

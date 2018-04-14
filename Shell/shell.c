@@ -17,7 +17,7 @@ void get_key_val(char *buf, char *key, char *val){
     int inlen = strlen(buf);
     strncpy(key,buf,inlen-len);
     key[strlen(key)]='\0';
-    strncpy(val,ret+1,len-1);
+    strncpy(val,ret+1,len);
     val[strlen(val)]='\0';
 }
 
@@ -73,7 +73,7 @@ void init_shell(char *conf_file){
         else if(buf[0] == 'a'){
             char *ret = strchr(buf, ' ');
             char *p = strchr(ret, '\r');
-            *p='\0';
+            // *p='\0';
             struct alias temp;
             int i = 1;
             while(ret[i] != '='){
