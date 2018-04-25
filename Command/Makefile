@@ -13,4 +13,7 @@ $(OBJDIR)/remind:
 $(OBJDIR)/jokey:
 	$(MAKE) -C jokey/
 
+clean: 
+	rm -f ../sbin/passgen ../sbin/remind ../sbin/jokey
+
 

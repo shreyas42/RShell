@@ -21,7 +21,7 @@ char *passgen(int passlen){
 int main(int argc, char *argv[]){
 	int passlen = 10; // Default length of password.
 	if(argc == 1){
-		goto jump;	
+		goto gen;	
 	}
 	if(!strcmp(argv[1], "-help")){
 		jump:	printf("passgen:\n\t Command Line Utility to generate a random password.\n\t Options: \n\t Length of password  -l option\n");
@@ -35,7 +35,8 @@ int main(int argc, char *argv[]){
 			goto jump;		
 		}	
 	}
-	char *pass_word = passgen(passlen);
-	printf("%s\n", pass_word);
+	gen: ;
+		char *pass_word = passgen(passlen);
+		printf("%s\n", pass_word);
 	return 0;
 }

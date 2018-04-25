@@ -6,25 +6,17 @@
 #include "../Executor/executor.h"
 #include "../Parser/command.h"
 #include "../util.h"
-#include <unistd.h>
-#include <sys/shm.h>
 #include <signal.h>
+#include <unistd.h>
 #define KCYN "\x1B[36m"
 #define KMAG "\x1B[35m"
 #define KWHT "\x1B[37m"
 
-char *foo = "RDX";
-int shmid;
-int killed;
 extern int ind;
 
 void interrupt_handler(int signo){
-    void *buf = shmat(shmid, NULL, SHM_RDONLY);
-    int pid = *(int*)buf;
-    //printf("DEBUG:pid:%d\n", pid);
-    kill(pid, SIGKILL);
-    killed = 1;
-}
+	return ;
+} 
 
 void get_key_val(char *buf, char *key, char *val){
     char * ret = strrchr(buf, '=');
@@ -133,14 +125,12 @@ char * get_command(){
 }
 
 int main(){
+	struct sigaction interruptaction;
+	interruptaction.sa_sigaction = &interrupt_handler;
+	interruptaction.sa_flags = SA_SIGINFO | SA_RESTART;
+	if(sigaction(SIGINT, &interruptaction , NULL) < 0)
+		perror("Sigaction");
     init_shell(config_file);
-    key_t key = ftok(foo, 0);
-    shmid = shmget(key, 8, IPC_CREAT|0644);
-    struct sigaction sig_act;
-    sig_act.sa_sigaction = interrupt_handler;
-    sig_act.sa_flags = SA_SIGINFO;
-    if(sigaction(SIGINT, &sig_act, NULL) < 0)
-            perror("SIGINT");
     char cwd[1024];
     char buffer[1024];
     int index1,index2,index3,index4;

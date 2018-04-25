@@ -3,27 +3,23 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/wait.h>
-#include <sys/shm.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <signal.h>
 #include <string.h>
 #include "executor.h"
 #include "../Parser/command.h"
 
-extern char *foo;
-extern int killed;
-extern int shmid;
 extern struct command *command_table;
 
 int execute(){
     // very basic execute
     // temp variable in case of redirection;
-    key_t key = ftok(foo, 0);
-    shmid = shmget(key, 8, IPC_CREAT);
-    void *buf = shmat(shmid, NULL, 0);
     int tempstdin = dup(0);
     int tempstdout = dup(1);
-
+	struct sigaction interruptaction;
+	interruptaction.sa_handler = SIG_DFL;
+	interruptaction.sa_flags = SA_SIGINFO;
     int input_fd;
     if (strcmp(command_table->infile, "stdin")){
         // Case to open the file if infile is set 
@@ -75,12 +71,11 @@ int execute(){
         }
         else{
             ret = fork();
-            memcpy(buf, &ret, sizeof(int));
             if(ret == 0){
+				if(sigaction(SIGINT, &interruptaction , NULL) < 0)
+					perror("Sigaction");
                 execvp(command_table->simplecmds[i]->args[0], command_table->simplecmds[i]->args);
-                perror("execvp");
-                if(killed)
-                    return ret;
+                perror(command_table->simplecmds[i]->args[0]);
                 exit(1);
             }
         }
