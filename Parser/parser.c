@@ -6,6 +6,7 @@
 #include "../util.h"
 #include <regex.h>
 #include <dirent.h>
+#include <time.h>
 
 extern struct history_cmd *hcmd;
 extern FILE *fp;
@@ -39,6 +40,7 @@ void reset_parser(){
 }
 
 void add_cmd_history(char *cmd, int pid){
+    // Add timestamp
     if(hcmd->max_size == hcmd->num_cmds){
         hcmd->num_cmds = 0;
     }
@@ -47,14 +49,15 @@ void add_cmd_history(char *cmd, int pid){
     temp.pid = pid;
     strncpy(temp.cmdname, cmd, strlen(cmd));
     temp.cmdname[strlen(cmd)+1] = '\0';
+    temp.tstamp = time(NULL);
     hcmd->cmdhis[hcmd->num_cmds] = temp;
     hcmd->num_cmds++;
-    fprintf(fp, "CMD: %s, PID: %d\n", hcmd->cmdhis[hcmd->num_cmds-1].cmdname, hcmd->cmdhis[hcmd->num_cmds-1].pid);
+    fprintf(fp, "TIMESTAMP: %s,CMD: %s, PID: %d\n", asctime(localtime(&hcmd->cmdhis[hcmd->num_cmds-1].tstamp)), hcmd->cmdhis[hcmd->num_cmds-1].cmdname, hcmd->cmdhis[hcmd->num_cmds-1].pid);
 }
 
 void display(){
     for(int i = 0;i < hcmd->num_cmds;i++){
-        printf("%s\t%d\n", hcmd->cmdhis[i].cmdname, hcmd->cmdhis[i].pid);
+        printf("%s\t%s\t%d\n", asctime(localtime(&hcmd->cmdhis[i].tstamp)),hcmd->cmdhis[i].cmdname, hcmd->cmdhis[i].pid);
     }
 }
 

@@ -9,6 +9,8 @@
 
 
 struct cmd{
+	// Time stamp
+	time_t tstamp;
     char* cmdname;
     int pid;
 };

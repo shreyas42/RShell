@@ -1,15 +1,30 @@
-#include<stdio.h>
-#include<stdlib.h>
-#include<string.h>
-#include"shell.h"
-#include"../Parser/parser.h"
-#include"../Executor/executor.h"
-#include"../Parser/command.h"
-#include"../util.h"
-#include<unistd.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "shell.h"
+#include "../Parser/parser.h"
+#include "../Executor/executor.h"
+#include "../Parser/command.h"
+#include "../util.h"
+#include <unistd.h>
+#include <sys/shm.h>
+#include <signal.h>
+#define KCYN "\x1B[36m"
+#define KMAG "\x1B[35m"
+#define KWHT "\x1B[37m"
 
-
+char *foo = "RDX";
+int shmid;
+int killed;
 extern int ind;
+
+void interrupt_handler(int signo){
+    void *buf = shmat(shmid, NULL, SHM_RDONLY);
+    int pid = *(int*)buf;
+    //printf("DEBUG:pid:%d\n", pid);
+    kill(pid, SIGKILL);
+    killed = 1;
+}
 
 void get_key_val(char *buf, char *key, char *val){
     char * ret = strrchr(buf, '=');
@@ -19,6 +34,19 @@ void get_key_val(char *buf, char *key, char *val){
     key[strlen(key)]='\0';
     strncpy(val,ret+1,len);
     val[strlen(val)]='\0';
+}
+
+void alias(){
+    char alias[32], cmd[32];
+    printf("Enter the alias name:\t");
+    scanf("%s", alias);
+    printf("Enter the command name:\t");
+    scanf("%s", cmd);
+    struct alias temp;
+    strcpy(temp.alias_name, alias);
+    strcpy(temp.command_name, cmd);
+    list[used++] = temp;
+    printf("Alias Created for %s!\n", cmd);
 }
 
 int get_index(char *key){
@@ -52,8 +80,8 @@ void init_shell(char *conf_file){
         if(buf[0] == '@'){
             char * ret = strchr(buf, ':');
             char conf[SIZE];
-            strncpy(conf,ret+1, strlen(ret)-1);
-            conf[strlen(conf)-1] = '\0';
+            strncpy(conf,ret+1, strlen(ret));
+            conf[strlen(conf)] = '\0';
             // printf("%s\n", conf);
             char key[SIZE], val[SIZE];
             memset(key,'\0',sizeof(key));
@@ -106,6 +134,13 @@ char * get_command(){
 
 int main(){
     init_shell(config_file);
+    key_t key = ftok(foo, 0);
+    shmid = shmget(key, 8, IPC_CREAT|0644);
+    struct sigaction sig_act;
+    sig_act.sa_sigaction = interrupt_handler;
+    sig_act.sa_flags = SA_SIGINFO;
+    if(sigaction(SIGINT, &sig_act, NULL) < 0)
+            perror("SIGINT");
     char cwd[1024];
     char buffer[1024];
     int index1,index2,index3,index4;
@@ -123,7 +158,8 @@ int main(){
     int pid;
     while(1){
         getcwd(cwd, sizeof(cwd));
-        printf("%s:%s%s ", buffer, cwd, config[index4].val);
+        printf("%s%s%s%s%s%s ", KCYN, buffer,KMAG, cwd,KWHT, config[index4].val);
+        fflush(stdout);
         // Read Input
         command = get_command();
         if(!strcmp(command, "exit")){
@@ -134,6 +170,14 @@ int main(){
         if(!strcmp(command, "\n")){
             free(command);
             command = NULL;
+            fflush(stdout);
+            fflush(stdin);
+            continue;
+        }
+        if(!strcmp(command, "alias")){  
+            free(command);
+            command = NULL;
+            alias();
             fflush(stdout);
             fflush(stdin);
             continue;
