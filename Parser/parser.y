@@ -12,7 +12,7 @@
 %token NEWLINE GREAT LESS GREATGREAT PIPE AMPERSAND NOTOKEN WORD
 %start goal
 %%
-goal: command_loop {printf("Valid input\n");}
+goal: command_loop {printf("Validated command\n");exit(0);}
 ;
 command_loop: command_loop command_line 
 |
@@ -49,7 +49,6 @@ background_opt: AMPERSAND /* set global variable isBackground to true */
 
 int main(){
     cmdtable = create_cmd_line();
-    printf("Enter the input program\n");
     return(yyparse()); 
 }
 
