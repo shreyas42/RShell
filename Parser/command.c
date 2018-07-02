@@ -1,262 +1,119 @@
-#include"util.h"
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include "command.h"
 
-//command entry functions
-struct command_entry *create_cmd_entry(char *cmd_name){
-    if(cmd_name == NULL){
-        fprintf(stderr,"invalid argument in %s at %d\n",__FILE__,__LINE__);
-        return NULL;
+struct simplecmd* make_new_simplecmd(char *cmdname){
+    struct simplecmd *smpcmd = (struct simplecmd *) malloc(sizeof(struct simplecmd));
+    smpcmd->cmd_name = (char *) malloc(sizeof(char)*CMD_NAME);
+    strncpy(smpcmd->cmd_name, cmdname, strlen(cmdname)+1);
+    smpcmd->max_num_arg = 8;
+    smpcmd->num_ava_arg = 0;
+    smpcmd->args = (char **) malloc(sizeof(char *)*(smpcmd->max_num_arg));
+    for(int i = 0;i < smpcmd->max_num_arg;i++){
+        smpcmd->args[i] = NULL;
     }
-    struct command_entry *this = (struct command_entry *)malloc(sizeof(struct command_entry));
-    if(this == NULL){
-        fprintf(stderr,"Malloc failed in %s at line %d\n",__FILE__,__LINE__);
-        return NULL;
-    }
-    this->availableArgs = DEFAULT_ARGS; //setting a default of 5 args
-    this->numArgs = 0;
-    this->arglist = (char **)malloc(this->availableArgs * sizeof(char *));
-    if(this->arglist == NULL){
-        fprintf(stderr,"Malloc failed in %s at line %d\n",__FILE__,__LINE__);
-        return NULL;
-    }
-    this->command_name = (char *)malloc(sizeof(cmd_name));
-    if(this->command_name == NULL){
-        fprintf(stderr,"Malloc failed in %s at line %d\n",__FILE__,__LINE__);
-        return NULL;
-    }
-    strcpy(this->command_name,cmd_name);
-    return this;
+    insert_args(smpcmd, cmdname);
+    return smpcmd;    
 }
 
-int add_argument(struct command_entry *this,char *arg){
-    if(this == NULL){
-        fprintf(stderr,"invalid argument in %s at %d\n",__FILE__,__LINE__);
-        return 0;
+void free_simple_cmd(struct simplecmd *scmd){
+    free(scmd->cmd_name);
+    for(int i = 0;i < scmd->num_ava_arg;i++){
+        free(scmd->args[i]);
     }
-    if(arg == NULL){
-        fprintf(stderr,"invalid argument in %s at %d\n",__FILE__,__LINE__);
-        return 0;
-    }
-    if(this->command_name == NULL){
-        fprintf(stderr,"Initialize before use error: %s at %d\n",__FILE__,__LINE__);
-        return 0;
-    }
-    if(this->arglist == NULL){
-        fprintf(stderr,"Initialize before use error: %s at %d\n",__FILE__,__LINE__);
-        return 0;
-    }
-    if(this->numArgs == this->availableArgs){
-        this->availableArgs *= 2;
-        this->arglist = realloc(this->arglist,this->availableArgs * sizeof(char *));
-    }
-    if((this->arglist[this->numArgs] = (char *)malloc(sizeof(arg))) == NULL){
-        fprintf(stderr,"Malloc failed in %s at line %d\n",__FILE__,__LINE__);
-        return 0;
-    }
-    strcpy(this->arglist[this->numArgs],arg);
-    this->numArgs++;
-    return 1;
+    free(scmd->args);
 }
 
-int delete_cmd_entry(struct command_entry *this){
-    free(this->command_name);
-    for(int i=0;i<this->numArgs;i++)
-        free(this->arglist[i]);
-    free(this->arglist);
-    free(this);
-    return 1;
+void insert_args(struct simplecmd* cmd, char *arg){
+    cmd->args[cmd->num_ava_arg] = (char *) malloc(sizeof(char)*strlen(arg)+1);
+    strncpy(cmd->args[cmd->num_ava_arg], arg, strlen(arg)+1);
+    cmd->num_ava_arg++;
 }
 
-void disp_cmd_entry(struct command_entry *this){
-    if(this == NULL){
-        fprintf(stderr,"Initialize before use error in %s at line %d\n",__FILE__,__LINE__);
+void new_command_table(){
+    if(command_table != NULL){
         return ;
     }
-    if(this->command_name == NULL){
-        fprintf(stderr,"Initialize before use error in %s at line %d\n",__FILE__,__LINE__);
+    command_table = (struct command *)malloc(sizeof(struct command));
+    command_table->num_sim_commands = MAXSIZE;
+    command_table->num_ava_simple_command = 0;
+    command_table->simplecmds = (struct simplecmd **)malloc(sizeof(struct simplecmd *)*MAXSIZE);
+    command_table->infile = (char *)malloc(sizeof(char)*ARGSIZE);
+    strcpy(command_table->infile, "stdin\0");
+    command_table->outfile = (char *)malloc(sizeof(char)*ARGSIZE);
+    strcpy(command_table->outfile, "stdout\0");
+    command_table->errfile = (char *)malloc(sizeof(char)*ARGSIZE);
+    strcpy(command_table->errfile, "stderr\0");
+    command_table->background = 0;
+    command_table->mode = 0; // 0 is overwrite 1 is append;
+}
+
+void free_command_table(){
+    if(command_table == NULL){
         return ;
     }
-    printf("%s\n",this->command_name);
-    if(this->arglist != NULL){
-        for(int i=0;i<this->numArgs;i++){
-            printf(" %s",this->arglist[i]);
-        }    
+    free(command_table->errfile);
+    free(command_table->infile);
+    free(command_table->outfile);
+    for(int i = 0;i < command_table->num_ava_simple_command;i++){
+        free_simple_cmd(command_table->simplecmds[i]);
+        free(command_table->simplecmds[i]);
     }
-    printf("\n");
+    free(command_table->simplecmds);
+    free(command_table);
+    command_table = NULL;
 }
 
-//command line functions
-struct command_line *create_cmd_line(){
-    struct command_line *this;
-    if((this = (struct command_line *)malloc(sizeof(struct command_line ))) == NULL){
-        fprintf(stderr,"Malloc failed in %s at line %d\n",__FILE__,__LINE__);
-        return NULL;
-    }
-    this->available_command_entries = DEFAULT_ENTRIES;
-    this->num_command_entries = 0;
-    this->infile = NULL;
-    this->outfile = NULL;
-    this->appendMode = FALSE;
-    this->isBackground = FALSE;
-    if((this->command_entry_list = (struct command_entry **)malloc(this->available_command_entries * sizeof(struct command_entry *))) == NULL){
-        fprintf(stderr,"Malloc failed in %s at line %d\n",__FILE__,__LINE__);
-        return NULL;
-    }
-    return this;
+void insert_simplecmd(struct simplecmd *scmd){
+    command_table->simplecmds[command_table->num_ava_simple_command] = scmd;
+    command_table->num_ava_simple_command++;
 }
-
-int add_cmd_entry(struct command_line *this,struct command_entry *arg){
-    if(this == NULL){
-        fprintf(stderr,"Failed to initialize cmd_line in %s at line %d\n",__FILE__,__LINE__);
-        return 0;
-    }
-    if(arg == NULL){
-        fprintf(stderr,"Invalid argument in %s at line %d\n",__FILE__,__LINE__);
-        return 0;
-    }
-    if(this->command_entry_list == NULL){
-        fprintf(stderr,"Initialize before use error: %s at %d\n",__FILE__,__LINE__);
-        return 0;
-    }
-    if(arg->command_name == NULL){
-        fprintf(stderr,"Initialize before use error: %s at %d\n",__FILE__,__LINE__);
-        return 0;
-    }
-    if(arg->arglist == NULL){
-        fprintf(stderr,"Initialize before use error: %s at %d\n",__FILE__,__LINE__);
-        return 0;
-    }
-    if(this->num_command_entries == this->available_command_entries){
-        this->available_command_entries *= 2;
-        this->command_entry_list = realloc(this->command_entry_list,this->available_command_entries * sizeof(struct command_entry));
-        if(this->command_entry_list == NULL){
-            fprintf(stderr,"Realloc failed in %s at line %d\n",__FILE__,__LINE__);
-            return 0; 
-        }
-    }
-    this->command_entry_list[this->num_command_entries] = arg;
-    this->num_command_entries++;
-    return 1;    
-}
-
-int set_params(struct command_line *this,char *infile,char *outfile,bool appendMode,bool isBackground){
-    if(this == NULL){
-        fprintf(stderr,"Initialize before use error: %s at %d\n",__FILE__,__LINE__);
-        return 0;
-    }
-    if(infile != NULL){
-        if((this->infile = (char *)malloc(sizeof(infile))) == NULL){
-            fprintf(stderr,"Malloc failed in %s at line %d\n",__FILE__,__LINE__);
-            return 0;
-        }
-        strcpy(this->infile,infile);
-    }
-    if(outfile != NULL){
-        if((this->outfile = (char *)malloc(sizeof(outfile))) == NULL){
-            fprintf(stderr,"Malloc failed in %s at line %d\n",__FILE__,__LINE__);
-            return 0;
-        }
-        strcpy(this->outfile,outfile);
-    }
-    this->appendMode = appendMode;
-    this->isBackground = isBackground;
-    return 1;
-
-}
-
-int delete_cmd_line(struct command_line *this){
-    for(int i=0;i<this->num_command_entries;i++){
-        delete_cmd_entry(this->command_entry_list[i]);
-    }
-    if(this->infile != NULL)
-        free(this->infile);
-    if(this->outfile != NULL)
-        free(this->outfile);
-    free(this);
-    return 1;
-}
-
-void disp_cmd_line(struct command_line *this){
-    if(this == NULL){
-        fprintf(stderr,"Initialize before use error in %s at line %d\n",__FILE__,__LINE__);
-        return ;
-    }
-    if(this->command_entry_list != NULL){
-        for(int i=0;i<this->num_command_entries;i++){
-            disp_cmd_entry(this->command_entry_list[i]);
-        }
-    }
-    if(this->infile != NULL){
-        printf("Infile: %s\n",this->infile);
-    }
-    if(this->outfile != NULL){
-        printf("Infile: %s\n",this->outfile);
-    }
-    if(this->appendMode){
-        printf("Append Mode\n");
-    }
-    if(this->isBackground){
-        printf("Background process\n");
+void print_simple_cmd(struct simplecmd *cmd){
+    fprintf(stderr, "AVA ARGS: %d\n", cmd->num_ava_arg);
+    fprintf(stderr, "MAX ARGS: %d\n", cmd->max_num_arg);
+    fprintf(stderr, "Command: %s\n", cmd->cmd_name);
+    for(int i = 0;i < cmd->num_ava_arg;i++){
+        fprintf(stderr, "ARGS: %s\n", cmd->args[i]);
     }
 }
 
-//command table functions
-struct command_table *initialize_command_table(){
-    struct command_table *this;
-    if((this = (struct command_table *)malloc(sizeof(struct command_table))) == NULL){
-        fprintf(stderr,"Malloc failed in %s at line %d\n",__FILE__,__LINE__);
-        return NULL;
+void print_table(){
+    fprintf(stderr, "***************************DEBUG: COMMAND TABLE***************************\n");
+    fprintf(stderr, "MAX CMDS: %d\n", command_table->num_sim_commands);
+    fprintf(stderr, "AVA CMDS: %d\n", command_table->num_ava_simple_command);
+    fprintf(stderr, "Infile: %s\n", command_table->infile);
+    fprintf(stderr, "Outfile: %s\n", command_table->outfile);
+    fprintf(stderr, "Errfile: %s\n", command_table->errfile);
+    if(command_table->mode){
+        fprintf(stderr, "Write Mode: Append Mode\n");
     }
-    this->available_args = DEFAULT_LINES;
-    this->num_args = 0;
-    if((this->cmd_line_list = (struct command_line *)malloc(this->available_args * sizeof(struct command_line *))) == NULL){
-        fprintf(stderr,"Malloc failed in %s at line %d\n",__FILE__,__LINE__);
-        return NULL;
+    else{
+        fprintf(stderr, "Write Mode: Overwrite Mode\n");
     }
-    return this;
+    if(command_table->background){
+        fprintf(stderr, "Background Process: True\n");
+    }
+    else{
+        fprintf(stderr, "Background Process: False\n");
+    }
+    for(int i = 0;i < command_table->num_ava_simple_command;i++){
+        print_simple_cmd(command_table->simplecmds[i]);
+    }
+    fprintf(stderr, "***************************DEBUG: END**********************************\n");
 }
 
-int add_cmd_line(struct command_table *table,struct command_line *line){
-    if(table == NULL){
-        fprintf(stderr,"Initialize before use error: %s at %d\n",__FILE__,__LINE__);
-        return 0;
+void clear_command_table(){
+    memset(command_table->outfile, '\0', ARGSIZE);
+    strncpy(command_table->outfile, "stdout\0",7);
+    memset(command_table->infile, '\0', ARGSIZE);
+    strncpy(command_table->infile, "stdin\0",6);
+    memset(command_table->errfile, '\0', ARGSIZE);
+    strncpy(command_table->errfile, "stderr\0",7);
+    command_table->mode = 0;
+    command_table->background = 0;
+    for(int i = 0;i < command_table->num_ava_simple_command;i++){
+        free_simple_cmd(command_table->simplecmds[i]);
     }
-    if(line == NULL){
-        fprintf(stderr,"Initialize before use error: %s at %d\n",__FILE__,__LINE__);
-        return 0;
-    }
-    if(table->cmd_line_list == NULL){
-        fprintf(stderr,"Initialize before use error: %s at %d\n",__FILE__,__LINE__);
-        return 0;
-    }
-    if(table->num_args == table->available_args){
-        table->available_args *= 2;
-        table->cmd_line_list = realloc(table->cmd_line_list,table->available_args * sizeof(struct command_line *));
-        if(table->cmd_line_list == NULL){
-            fprintf(stderr,"Malloc failed in %s at %d\n",__FILE__,__LINE__);
-            return 0;
-        }
-    }
-    table->cmd_line_list[table->num_args] = line;
-    table->num_args++;
-    return 1;
-}
-
-int delete_cmd_table(struct command_table *this){
-    for(int i=0;i<this->num_args;i++){
-        delete_cmd_line(this->cmd_line_list[i]);
-    }
-    free(this);
-    return 1;
-}
-
-void disp_cmd_table(struct command_table *this){
-    if(this == NULL){
-        fprintf(stderr,"Initialize before use error in %s at line %d\n",__FILE__,__LINE__);
-        return ;
-    }
-    if(this->cmd_line_list != NULL){
-        for(int i=0;i<this->num_args;i++){
-            disp_cmd_line(this->cmd_line_list[i]);
-        }
-    }
+    command_table->num_ava_simple_command = 0;
 }

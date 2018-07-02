@@ -1,26 +1,12 @@
 CC = gcc
 CFLAGS = -g -Wall
+OBJDIR = ../bin
 
-all: output
+all: $(OBJDIR)/parser.o $(OBJDIR)/command.o
 
-output: y.tab.o lex.yy.o command.o
-	$(CC) $(CFLAGS) -o $@ $^ -ll -ly
+$(OBJDIR)/command.o: c*.c c*.h
+	$(CC) $(CFLAGS) -c -o $@ $<
 
-y.tab.o:
-	yacc -d parser.y
-	$(CC) -c y.tab.c
-lex.yy.o:
-	lex parser.l
-	$(CC) -c lex.yy.c
+$(OBJDIR)/parser.o: p*.c p*.h
+	$(CC) $(CFLAGS) -c -o $@ $<
 
-test: test.o command.o
-	$(CC) $(CFLAGS) -o $@ $^
-
-test.o: test.c util.h
-	$(CC) $(CFLAGS) -c $^
-
-command.o: command.c util.h
-	$(CC) $(CFLAGS) -c $^
-
-clean:
-	$(RM) test output *~ *.o lex.yy.c y.tab.h y.tab.c *.gch

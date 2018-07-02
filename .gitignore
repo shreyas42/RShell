@@ -1,5 +1,11 @@
 .vscode
-a.out
-*.o
-*.gch
-.DS_STORE
+rshell
+bin
+Chapter5-WritingYourOwnShell.pdf
+Lab 2-- Implementing a shell.pdf
+sbin/passgen
+sbin/remind
+sbin/jokey
+sbin/test.c
+test
+1.c
